@@ -22,7 +22,16 @@ func RegisterAuthRoutes(app *fiber.App, database *sql.DB) {
 	auth.Post("/login", loginHandler(userRepo))
 }
 
-// signupHandler handles user signup
+// @Summary Create a new user account
+// @Description Register a new user with username and password
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param user body models.User true "User credentials"
+// @Success 201 {object} models.UserResponse "User created successfully"
+// @Failure 400 {object} models.Error "Invalid request"
+// @Failure 500 {object} models.Error "Server error"
+// @Router /api/signup [post]
 func signupHandler(userRepo *db.UserRepository) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var user models.User
@@ -43,7 +52,15 @@ func signupHandler(userRepo *db.UserRepository) fiber.Handler {
 	}
 }
 
-// loginHandler handles user login
+// @Summary Login to existing account
+// @Description Authenticate with username and password
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param credentials body models.LoginRequest true "Login credentials"
+// @Success 200 {object} models.UserResponse "Login successful"
+// @Failure 401 {object} models.Error "Invalid credentials"
+// @Router /api/login [post]
 func loginHandler(userRepo *db.UserRepository) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var credentials models.LoginRequest

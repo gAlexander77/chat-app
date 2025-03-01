@@ -8,7 +8,36 @@ import (
 type User struct {
 	ID       int    `json:"id"`
 	Username string `json:"username"`
-	Password string `json:"-"` // Don't send password in JSON responses
+	Password string `json:"password,omitempty"`
+}
+
+// UserResponse represents the response after user creation or login
+type UserResponse struct {
+	ID       int    `json:"id"`
+	Username string `json:"username"`
+	Message  string `json:"message"`
+}
+
+// Error represents an error response
+type Error struct {
+	Message string `json:"message"`
+}
+
+// LoginRequest represents a login request
+type LoginRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+// Lobby represents a chat lobby
+type Lobby struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+}
+
+// LobbyRequest represents a request to create a lobby
+type LobbyRequest struct {
+	Name string `json:"name"`
 }
 
 // Message represents a chat message
@@ -21,19 +50,7 @@ type Message struct {
 	Timestamp time.Time `json:"timestamp"`
 }
 
-// Lobby represents a chat lobby
-type Lobby struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
-}
-
-// LoginRequest represents login credentials
-type LoginRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-// MessageRequest represents a message sent by a client
+// MessageRequest represents a request to send a message
 type MessageRequest struct {
 	Content string `json:"content"`
 }

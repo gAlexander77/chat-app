@@ -9,8 +9,14 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/swagger"
 )
 
+// @title Chat Application API
+// @version 1.0
+// @description API for real-time chat application
+// @host localhost:8080
+// @BasePath /
 func main() {
 	// Load configuration
 	cfg := config.LoadConfig()
@@ -18,7 +24,7 @@ func main() {
 	// Initialize database
 	database, err := db.InitDB(cfg.Database)
 	if err != nil {
-		log.Fatal("Error initializing database:", err)
+		log.Fatal("Error connecting to database:", err)
 	}
 	defer database.Close()
 
@@ -48,7 +54,20 @@ func main() {
 
 	// Middleware
 	app.Use(logger.New())
-	app.Use(cors.New())
+	app.Use(cors.New(cors.Config{
+		AllowOrigins:     "http://localhost:3000",
+		AllowMethods:     "GET,POST,PUT,DELETE",
+		AllowHeaders:     "Origin,Content-Type,Accept,Authorization",
+		AllowCredentials: true,
+	}))
+
+	// Serve OpenAPI documentation
+	app.Get("/swagger/*", swagger.HandlerDefault)
+
+	// Serve the OpenAPI YAML file
+	app.Get("/openapi.yaml", func(c *fiber.Ctx) error {
+		return c.SendFile("./openapi.yaml")
+	})
 
 	// Register routes
 	routes.RegisterAuthRoutes(app, database)

@@ -1,0 +1,96 @@
+basePath: /
+definitions:
+  models.Error:
+    properties:
+      message:
+        type: string
+    type: object
+  models.LoginRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  models.User:
+    properties:
+      id:
+        type: integer
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  models.UserResponse:
+    properties:
+      id:
+        type: integer
+      message:
+        type: string
+      username:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API for real-time chat application
+  title: Chat Application API
+  version: "1.0"
+paths:
+  /api/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate with username and password
+      parameters:
+      - description: Login credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/models.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login successful
+          schema:
+            $ref: '#/definitions/models.UserResponse'
+        "401":
+          description: Invalid credentials
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Login to existing account
+      tags:
+      - auth
+  /api/signup:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user with username and password
+      parameters:
+      - description: User credentials
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User created successfully
+          schema:
+            $ref: '#/definitions/models.UserResponse'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Create a new user account
+      tags:
+      - auth
+swagger: "2.0"
