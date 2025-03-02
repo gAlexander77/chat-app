@@ -5,12 +5,6 @@ import { Message } from './api';
 // WebSocket URL
 const WS_URL = 'ws://localhost:8080/api/ws';
 
-// WebSocket message types
-type WebSocketMessage = {
-  type: 'message' | 'user_joined' | 'user_left' | 'error';
-  data: any;
-};
-
 // WebSocket client class
 export class WebSocketClient {
   private socket: WebSocket | null = null;
@@ -50,8 +44,31 @@ export class WebSocketClient {
 
         this.socket.onmessage = (event) => {
           try {
-            const data = JSON.parse(event.data);
-            this.handleMessage(data);
+            console.log("Raw WebSocket message:", event.data);
+            const message = JSON.parse(event.data);
+            
+            // The server sends Message objects directly, not wrapped in a type/data structure
+            if (message.user_id === 0 && message.username === "System") {
+              // This is a system message about a user joining or leaving
+              if (message.content.includes("has joined")) {
+                const username = message.content.split(" has joined")[0];
+                this.notifyUserJoinedListeners(username);
+              } else if (message.content.includes("has left")) {
+                const username = message.content.split(" has left")[0];
+                this.notifyUserLeftListeners(username);
+              }
+            } else {
+              // Regular chat message
+              const formattedMessage: Message = {
+                id: message.id,
+                content: message.content,
+                user_id: message.user_id,
+                username: message.username,
+                lobby_id: message.lobby_id,
+                timestamp: message.timestamp // Keep as string to match the Message interface
+              };
+              this.notifyMessageListeners(formattedMessage);
+            }
           } catch (err) {
             console.error('Error parsing WebSocket message:', err);
           }
@@ -80,34 +97,6 @@ export class WebSocketClient {
     });
   }
 
-  // Handle incoming WebSocket messages
-  private handleMessage(data: WebSocketMessage) {
-    switch (data.type) {
-      case 'message':
-        // Handle chat message
-        const message = data.data as Message;
-        this.notifyMessageListeners(message);
-        break;
-      case 'user_joined':
-        // Handle user joined event
-        const joinedUsername = data.data.username;
-        this.notifyUserJoinedListeners(joinedUsername);
-        break;
-      case 'user_left':
-        // Handle user left event
-        const leftUsername = data.data.username;
-        this.notifyUserLeftListeners(leftUsername);
-        break;
-      case 'error':
-        // Handle error message
-        const errorMessage = data.data.message;
-        this.notifyErrorListeners(errorMessage);
-        break;
-      default:
-        console.warn('Unknown message type:', data.type);
-    }
-  }
-
   // Attempt to reconnect with exponential backoff
   private attemptReconnect() {
     const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
@@ -133,11 +122,12 @@ export class WebSocketClient {
       throw new Error('WebSocket not connected');
     }
 
+    // The server expects a MessageRequest with just the content field
     const message = {
-      type: 'message',
       content: content
     };
 
+    console.log("Sending message:", message);
     this.socket.send(JSON.stringify(message));
   }
 
